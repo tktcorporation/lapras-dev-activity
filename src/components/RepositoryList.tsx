@@ -1,21 +1,68 @@
-import React from 'react';
-import { GithubIcon, StarIcon, GitForkIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { GithubIcon, StarIcon, GitForkIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { GithubRepository } from '../types/lapras';
 
 interface RepositoryListProps {
   repositories: GithubRepository[];
+  summaryMode?: boolean;
 }
 
-export function RepositoryList({ repositories }: RepositoryListProps) {
+export function RepositoryList({ repositories, summaryMode = true }: RepositoryListProps) {
+  const [showAll, setShowAll] = useState(false);
+  
   const sortedRepos = [...repositories]
-    .sort((a, b) => parseInt(b.stargazers_count) - parseInt(a.stargazers_count))
-    .slice(0, 6);
+    .sort((a, b) => parseInt(b.stargazers_count) - parseInt(a.stargazers_count));
+    
+  const totalCount = repositories.length;
+  const displayRepos = summaryMode && !showAll ? sortedRepos.slice(0, 4) : sortedRepos;
+  
+  // リポジトリの言語使用統計を計算
+  const languageStats = repositories.reduce((stats, repo) => {
+    if (repo.language) {
+      stats[repo.language] = (stats[repo.language] || 0) + 1;
+    }
+    return stats;
+  }, {} as Record<string, number>);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Featured Repositories</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">リポジトリ ({totalCount})</h2>
+        {summaryMode && totalCount > 4 && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            {showAll ? (
+              <>
+                <span>簡易表示</span>
+                <ChevronUpIcon className="w-4 h-4 ml-1" />
+              </>
+            ) : (
+              <>
+                <span>すべて表示</span>
+                <ChevronDownIcon className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </button>
+        )}
+      </div>
+      
+      {summaryMode && !showAll && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {Object.entries(languageStats)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([lang, count]) => (
+              <span key={lang} className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">
+                {lang}: {count}
+              </span>
+            ))}
+        </div>
+      )}
+      
       <div className="grid gap-4 md:grid-cols-2">
-        {sortedRepos.map((repo) => (
+        {displayRepos.map((repo) => (
           <a
             key={repo.id}
             href={repo.url}

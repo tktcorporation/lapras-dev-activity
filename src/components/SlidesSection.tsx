@@ -1,22 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SpeakerDeckSlide } from '../types/lapras';
 import { formatDate } from '../utils/date';
-import { PresentationIcon, StarIcon, EyeIcon } from 'lucide-react';
+import { PresentationIcon, StarIcon, EyeIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
 interface SlidesSectionProps {
   slides: SpeakerDeckSlide[];
+  summaryMode?: boolean;
 }
 
-export function SlidesSection({ slides }: SlidesSectionProps) {
+export function SlidesSection({ slides, summaryMode = true }: SlidesSectionProps) {
+  const [showAll, setShowAll] = useState(false);
+  
   const sortedSlides = [...slides].sort(
     (a, b) => new Date(b.presentation_date).getTime() - new Date(a.presentation_date).getTime()
   );
+  
+  const totalCount = slides.length;
+  const displaySlides = summaryMode && !showAll ? sortedSlides.slice(0, 3) : sortedSlides;
+  
+  if (slides.length === 0) return null;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Presentations</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">プレゼンテーション ({totalCount})</h2>
+        {summaryMode && totalCount > 3 && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            {showAll ? (
+              <>
+                <span>簡易表示</span>
+                <ChevronUpIcon className="w-4 h-4 ml-1" />
+              </>
+            ) : (
+              <>
+                <span>すべて表示</span>
+                <ChevronDownIcon className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </button>
+        )}
+      </div>
+      
+      {summaryMode && !showAll && totalCount > 3 && (
+        <div className="mb-4">
+          <p className="text-sm text-gray-600">
+            最近の {displaySlides.length} 件を表示中（全 {totalCount} 件）
+          </p>
+        </div>
+      )}
+      
       <div className="space-y-4">
-        {sortedSlides.map((slide, index) => (
+        {displaySlides.map((slide, index) => (
           <a
             key={`${slide.url}-${index}`}
             href={slide.url}

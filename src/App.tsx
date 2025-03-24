@@ -12,6 +12,7 @@ function App() {
   const [profile, setProfile] = useState<LaprasProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [summaryMode, setSummaryMode] = useState(true);
 
   useEffect(() => {
     fetch('/api/public/tktcorporation.json')
@@ -51,6 +52,21 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">表示モード</h2>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={!summaryMode}
+                onChange={() => setSummaryMode(!summaryMode)}
+                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm">すべてのデータを表示</span>
+            </label>
+          </div>
+        </div>
+        
         <ProfileHeader
           name={profile.name}
           description={profile.description}
@@ -61,20 +77,33 @@ function App() {
         
         <Stats profile={profile} />
         
-        <ActivityTimeline profile={profile} />
+        <ActivityTimeline 
+          profile={profile} 
+          summaryMode={summaryMode} 
+        />
         
         <ArticleSection
           qiitaArticles={profile.qiita_articles}
           zennArticles={profile.zenn_articles}
           blogArticles={profile.blog_articles}
           noteArticles={profile.note_articles}
+          summaryMode={summaryMode}
         />
         
-        <SlidesSection slides={profile.speaker_deck_slides} />
+        <SlidesSection 
+          slides={profile.speaker_deck_slides} 
+          summaryMode={summaryMode} 
+        />
         
-        <RepositoryList repositories={profile.github_repositories} />
+        <RepositoryList 
+          repositories={profile.github_repositories} 
+          summaryMode={summaryMode} 
+        />
         
-        <EventList events={profile.events} />
+        <EventList 
+          events={profile.events} 
+          summaryMode={summaryMode} 
+        />
       </div>
     </div>
   );

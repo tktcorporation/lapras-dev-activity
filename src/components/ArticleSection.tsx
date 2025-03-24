@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { QiitaArticle, ZennArticle, BlogArticle, NoteArticle } from '../types/lapras';
 import { formatDate } from '../utils/date';
-import { BookOpenIcon } from 'lucide-react';
+import { BookOpenIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
 interface ArticleSectionProps {
   qiitaArticles: QiitaArticle[];
   zennArticles: ZennArticle[];
   blogArticles: BlogArticle[];
   noteArticles: NoteArticle[];
+  summaryMode?: boolean;
 }
 
-export function ArticleSection({ qiitaArticles, zennArticles, blogArticles, noteArticles }: ArticleSectionProps) {
+export function ArticleSection({ qiitaArticles, zennArticles, blogArticles, noteArticles, summaryMode = true }: ArticleSectionProps) {
+  const [showAll, setShowAll] = useState(false);
+  
   const allArticles = [
     ...qiitaArticles.map(article => ({
       ...article,
@@ -34,11 +37,51 @@ export function ArticleSection({ qiitaArticles, zennArticles, blogArticles, note
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const totalCount = allArticles.length;
+  const displayArticles = summaryMode && !showAll ? allArticles.slice(0, 5) : allArticles;
+  const sources = {
+    Qiita: qiitaArticles.length,
+    Zenn: zennArticles.length,
+    Blog: blogArticles.length,
+    Note: noteArticles.length
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Articles</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">記事 ({totalCount})</h2>
+        {summaryMode && totalCount > 5 && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            {showAll ? (
+              <>
+                <span>簡易表示</span>
+                <ChevronUpIcon className="w-4 h-4 ml-1" />
+              </>
+            ) : (
+              <>
+                <span>すべて表示</span>
+                <ChevronDownIcon className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {summaryMode && !showAll && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {Object.entries(sources).map(([source, count]) => count > 0 && (
+            <span key={source} className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">
+              {source}: {count}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-4">
-        {allArticles.map((article, index) => (
+        {displayArticles.map((article, index) => (
           <a
             key={`${article.url}-${index}`}
             href={article.url}
